@@ -1,4 +1,4 @@
-*hmacauth
+hmacauth
 
 HTTP middleware in Go for Rails-compatible HMAC authentication
 
@@ -24,7 +24,7 @@ params[:token] = token
 
 ```
 
-**Go side
+Go side
 
 `hmacauth.Authenticate` takes the message verifier key, the URL param from which to pull out the HMAC token, and the protected HTTP handler function that takes an extra parameter: the original decoded token as a string.  In this case the token would need to be JSON decoded still.
 
