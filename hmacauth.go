@@ -37,7 +37,7 @@ func parseToken(token string) (*message, error) {
 	return &message{message: parts[0], MAC: parts[1], Decoded: string(decoded)}, nil
 }
 
-func Authenticate(key string, param string, fn func(http.ResponseWriter, *http.Request, map[string]string)) http.HandlerFunc {
+func Authenticate(key string, param string, fn func(http.ResponseWriter, *http.Request, string)) http.HandlerFunc {
 	handler := &handler{Key: key, Param: param}
 
 	return func(w http.ResponseWriter, r *http.Request) {
