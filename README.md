@@ -1,5 +1,7 @@
 hmacauth
 
+[![Build Status](https://travis-ci.org/boourns/hmacauth.svg?branch=master)](https://travis-ci.org/boourns/hmacauth)
+
 HTTP middleware in Go for Rails-compatible HMAC authentication
 
 Share a secret key and authenticate rails clients in go
