@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"fmt"
 )
 
 var (
@@ -30,7 +31,7 @@ func TestParseToken(t *testing.T) {
 }
 
 func TestExpectedHMACValue(t *testing.T) {
-	message, err := parseToken("InRlc3Qi--3dd740af30f0453dd5220b56ba4fe57f48f892af")
+	message, err := parseToken("WyIxNTg3MzYwMDEwIl0=--af40819c97a2a5d86d0e3222f5aada76ac3af397")
 
 	if err != nil {
 		t.Fatalf("Error parsing token: %v", err)
@@ -42,12 +43,12 @@ func TestExpectedHMACValue(t *testing.T) {
 }
 
 func TestAuthenticateWrapperWorks(t *testing.T) {
-	handler := Authenticate("testkey", "token", func(response http.ResponseWriter, request *http.Request, token string) {
-		response.Write([]byte(token))
+	handler := Authenticate("testkey", "token", func(response http.ResponseWriter, request *http.Request, token []string) {
+		response.Write([]byte(fmt.Sprintf("%v", token)))
 	})
 
 	recorder := httptest.NewRecorder()
-	url := "http://example.com/echo?token=InRlc3Qi--3dd740af30f0453dd5220b56ba4fe57f48f892af"
+	url := "http://example.com/echo?token=WyIxNTg3MzYwMDEwIl0=--af40819c97a2a5d86d0e3222f5aada76ac3af397"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -60,13 +61,13 @@ func TestAuthenticateWrapperWorks(t *testing.T) {
 		t.Fatalf("HMAC authentication failed")
 	}
 
-	if body := recorder.Body.String(); body != "\"test\"" {
+	if body := recorder.Body.String(); body != "[1587360010]" {
 		t.Fatalf("unexpected body: %v", body)
 	}
 }
 
 func ConfirmFailURL(url string, t *testing.T) {
-	handler := Authenticate("testkey", "token", func(response http.ResponseWriter, request *http.Request, token string) {
+	handler := Authenticate("testkey", "token", func(response http.ResponseWriter, request *http.Request, token []string) {
 		t.Fatalf("HTTP request was not blocked in Authenticate()")
 	})
 
@@ -102,4 +103,8 @@ func TestAuthenticateBlocksNoKeyWithJustSplit(t *testing.T) {
 
 func TestAuthenticateBlocksNoKey(t *testing.T) {
 	ConfirmFailURL("http://example.com/echo", t)
+}
+
+func TestAuthenticateBlocksExpiredTokens(t *testing.T) {
+	ConfirmFailURL("http://example.com/echo?token=WyIxMzM0ODk5MjEwIl0=--804e028c2344992758b3948a22a1a92adb9d9a07", t)
 }
