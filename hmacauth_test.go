@@ -16,8 +16,8 @@ func TestParseToken(t *testing.T) {
 		t.Fatalf("Error parsing token: %v", err)
 	}
 
-	if message.message != "InRlc3Qi" {
-		t.Fatalf("parseToken parsed message %v", message.message)
+	if message.Message != "InRlc3Qi" {
+		t.Fatalf("parseToken parsed message %v", message.Message)
 	}
 
 	if message.MAC != "3dd740af30f0453dd5220b56ba4fe57f48f892af" {
