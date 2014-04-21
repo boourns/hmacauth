@@ -43,12 +43,12 @@ func TestExpectedHMACValue(t *testing.T) {
 }
 
 func TestAuthenticateWrapperWorks(t *testing.T) {
-	handler := Authenticate("testkey", "token", func(response http.ResponseWriter, request *http.Request, token []string) {
+	handler := Authenticate("testkey", "token", func(response http.ResponseWriter, request *http.Request, token []int64) {
 		response.Write([]byte(fmt.Sprintf("%v", token)))
 	})
 
 	recorder := httptest.NewRecorder()
-	url := "http://example.com/echo?token=WyIxNTg3MzYwMDEwIl0=--af40819c97a2a5d86d0e3222f5aada76ac3af397"
+	url := "http://example.com/echo?token=WzE1ODczNjAwMTBd--de4702a95398d2305d52ddb0ec37b68ef80f92f6"
 
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -67,7 +67,7 @@ func TestAuthenticateWrapperWorks(t *testing.T) {
 }
 
 func ConfirmFailURL(url string, t *testing.T) {
-	handler := Authenticate("testkey", "token", func(response http.ResponseWriter, request *http.Request, token []string) {
+	handler := Authenticate("testkey", "token", func(response http.ResponseWriter, request *http.Request, token []int64) {
 		t.Fatalf("HTTP request was not blocked in Authenticate()")
 	})
 
@@ -106,5 +106,5 @@ func TestAuthenticateBlocksNoKey(t *testing.T) {
 }
 
 func TestAuthenticateBlocksExpiredTokens(t *testing.T) {
-	ConfirmFailURL("http://example.com/echo?token=WyIxMzM0ODk5MjEwIl0=--804e028c2344992758b3948a22a1a92adb9d9a07", t)
+	ConfirmFailURL("http://example.com/echo?token=WzEzMzUwMzc5MTNd--9c277685955744ab4ebd62309584c72edb635dbf", t)
 }

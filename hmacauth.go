@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 )
 
 type handler struct {
@@ -38,7 +39,7 @@ func parseToken(token string) (*message, error) {
 	return &message{Message: parts[0], MAC: parts[1], Decoded: string(decoded)}, nil
 }
 
-func Authenticate(key string, param string, fn func(http.ResponseWriter, *http.Request, []string)) http.HandlerFunc {
+func Authenticate(key string, param string, fn func(http.ResponseWriter, *http.Request, []int64)) http.HandlerFunc {
 	handler := &handler{Key: key, Param: param}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -67,10 +68,16 @@ func Authenticate(key string, param string, fn func(http.ResponseWriter, *http.R
 			return
 		}
 
-		var parsed []string
+		var parsed []int64
 		err = json.Unmarshal([]byte(auth.Decoded), &parsed)
 		if err != nil {
 			log.Printf("Couldn't demarshal form token: %s", err)
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
+
+		if parsed[0] < time.Now().Unix() {
+			log.Printf("Token %v is expired (timestamp = %v)", token, parsed[0])
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
