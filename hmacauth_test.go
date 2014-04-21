@@ -8,7 +8,7 @@ import (
 )
 
 var (
-	h = &handler{Key: "testkey", Param: "token"}
+	h = &handler{Keys: []string{"testkey", "othertestkey"}, Param: "token"}
 )
 
 func TestParseToken(t *testing.T) {
@@ -42,8 +42,20 @@ func TestExpectedHMACValue(t *testing.T) {
 	}
 }
 
+func TestAlternateKeySucceeds(t *testing.T) {
+	message, err := parseToken("WzE1MzUwMzc5MTNd--84081843e19ace8210ddb70ac27e401c44c01781")
+
+	if err != nil {
+		t.Fatalf("Error parsing token: %v", err)
+	}
+
+	if h.isValid(message) == false {
+		t.Fatalf("handler cannot decrypt ActiveSupport::messageVerifier token for alternate key")
+	}
+}
+
 func TestAuthenticateWrapperWorks(t *testing.T) {
-	handler := Authenticate("testkey", "token", func(response http.ResponseWriter, request *http.Request, token []int64) {
+	handler := Authenticate([]string{"testkey"}, "token", func(response http.ResponseWriter, request *http.Request, token []int64) {
 		response.Write([]byte(fmt.Sprintf("%v", token)))
 	})
 
@@ -67,7 +79,7 @@ func TestAuthenticateWrapperWorks(t *testing.T) {
 }
 
 func ConfirmFailURL(url string, t *testing.T) {
-	handler := Authenticate("testkey", "token", func(response http.ResponseWriter, request *http.Request, token []int64) {
+	handler := Authenticate([]string{"testkey"}, "token", func(response http.ResponseWriter, request *http.Request, token []int64) {
 		t.Fatalf("HTTP request was not blocked in Authenticate()")
 	})
 
@@ -108,3 +120,4 @@ func TestAuthenticateBlocksNoKey(t *testing.T) {
 func TestAuthenticateBlocksExpiredTokens(t *testing.T) {
 	ConfirmFailURL("http://example.com/echo?token=WzEzMzUwMzc5MTNd--9c277685955744ab4ebd62309584c72edb635dbf", t)
 }
+

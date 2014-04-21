@@ -15,7 +15,7 @@ import (
 )
 
 type handler struct {
-	Key   string
+	Keys  []string
 	Param string
 }
 
@@ -39,8 +39,8 @@ func parseToken(token string) (*message, error) {
 	return &message{Message: parts[0], MAC: parts[1], Decoded: string(decoded)}, nil
 }
 
-func Authenticate(key string, param string, fn func(http.ResponseWriter, *http.Request, []int64)) http.HandlerFunc {
-	handler := &handler{Key: key, Param: param}
+func Authenticate(keys []string, param string, fn func(http.ResponseWriter, *http.Request, []int64)) http.HandlerFunc {
+	handler := &handler{Keys: keys, Param: param}
 
 	return func(w http.ResponseWriter, r *http.Request) {
 		err := r.ParseForm()
@@ -87,12 +87,17 @@ func Authenticate(key string, param string, fn func(http.ResponseWriter, *http.R
 }
 
 func (h *handler) isValid(message *message) bool {
-	expectedMAC := h.Calculate(message.Message)
-	return hmac.Equal([]byte(message.MAC), []byte(expectedMAC))
+	for _, key := range h.Keys {
+		expectedMAC := Calculate(message.Message, key)
+		if hmac.Equal([]byte(message.MAC), []byte(expectedMAC)) {
+			return true
+		}
+	}
+	return false
 }
 
-func (h *handler) Calculate(message string) string {
-	mac := hmac.New(sha1.New, []byte(h.Key))
+func Calculate(message string, key string) string {
+	mac := hmac.New(sha1.New, []byte(key))
 	mac.Write([]byte(message))
 	return hex.EncodeToString(mac.Sum(nil))
 }
