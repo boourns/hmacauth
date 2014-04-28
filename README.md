@@ -9,6 +9,7 @@ Share a secret key and authenticate rails clients in go
 **Rails Side
 
 ```
+require 'active_support/all'
 class JSONSerializer
   class << self
     def dump(value)
@@ -21,7 +22,12 @@ class JSONSerializer
   end
 end
 verifier = ActiveSupport::MessageVerifier.new('testkey', :serializer => JSONSerializer)
-token = verifier.generate({ user_id: 123})
+expiry_time = (Time.now + 1.hour).to_i
+user_id = 12345
+# expiry epoch must be first field in token
+# all entries in token array must be integers
+# put whatever else you want in the token to validate the credentials (like a matching username)
+token = verifier.generate([expiry_time, user_id])
 params[:token] = token
 
 ```
