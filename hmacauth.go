@@ -5,9 +5,9 @@ import (
 	"crypto/sha1"
 	"encoding/base64"
 	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"encoding/json"
 	"log"
 	"net/http"
 	"strings"
@@ -43,13 +43,7 @@ func Authenticate(keys []string, param string, fn func(http.ResponseWriter, *htt
 	handler := &handler{Keys: keys, Param: param}
 
 	return func(w http.ResponseWriter, r *http.Request) {
-		err := r.ParseForm()
-		if err != nil {
-			log.Printf("Couldn't parse form from request")
-			http.Error(w, "", http.StatusUnauthorized)
-			return
-		}
-		token := r.Form[handler.Param]
+		token := r.URL.Query()[handler.Param]
 		if token == nil || len(token) != 1 {
 			log.Printf("Couldn't find param %v in request", handler.Param)
 			http.Error(w, "", http.StatusUnauthorized)

@@ -1,10 +1,10 @@
 package hmacauth
 
 import (
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
-	"fmt"
 )
 
 var (
@@ -120,4 +120,3 @@ func TestAuthenticateBlocksNoKey(t *testing.T) {
 func TestAuthenticateBlocksExpiredTokens(t *testing.T) {
 	ConfirmFailURL("http://example.com/echo?token=WzEzMzUwMzc5MTNd--9c277685955744ab4ebd62309584c72edb635dbf", t)
 }
-
