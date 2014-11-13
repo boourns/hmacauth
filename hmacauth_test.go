@@ -1,6 +1,7 @@
 package hmacauth
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -55,8 +56,10 @@ func TestAlternateKeySucceeds(t *testing.T) {
 }
 
 func TestAuthenticateWrapperWorks(t *testing.T) {
-	handler := Authenticate([]string{"testkey"}, "token", func(response http.ResponseWriter, request *http.Request, token []int64) {
-		response.Write([]byte(fmt.Sprintf("%v", token)))
+	handler := Authenticate([]string{"testkey"}, "token", func(response http.ResponseWriter, request *http.Request, token []json.RawMessage) {
+		var timestamp int64
+		_ = json.Unmarshal(token[0], &timestamp)
+		response.Write([]byte(fmt.Sprintf("%v", []int64{timestamp})))
 	})
 
 	recorder := httptest.NewRecorder()
@@ -79,7 +82,7 @@ func TestAuthenticateWrapperWorks(t *testing.T) {
 }
 
 func ConfirmFailURL(url string, t *testing.T) {
-	handler := Authenticate([]string{"testkey"}, "token", func(response http.ResponseWriter, request *http.Request, token []int64) {
+	handler := Authenticate([]string{"testkey"}, "token", func(response http.ResponseWriter, request *http.Request, token []json.RawMessage) {
 		t.Fatalf("HTTP request was not blocked in Authenticate()")
 	})
 
