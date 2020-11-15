@@ -39,7 +39,7 @@ func parseToken(token string) (*message, error) {
 	return &message{Message: parts[0], MAC: parts[1], Decoded: string(decoded)}, nil
 }
 
-func Authenticate(keys []string, param string, fn func(http.ResponseWriter, *http.Request, []int64)) http.HandlerFunc {
+func Authenticate(keys []string, param string, fn func(http.ResponseWriter, *http.Request, []json.RawMessage)) http.HandlerFunc {
 	handler := &handler{Keys: keys, Param: param}
 
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -62,7 +62,7 @@ func Authenticate(keys []string, param string, fn func(http.ResponseWriter, *htt
 			return
 		}
 
-		var parsed []int64
+		var parsed []json.RawMessage
 		err = json.Unmarshal([]byte(auth.Decoded), &parsed)
 		if err != nil {
 			log.Printf("Couldn't demarshal form token: %s", err)
@@ -70,8 +70,22 @@ func Authenticate(keys []string, param string, fn func(http.ResponseWriter, *htt
 			return
 		}
 
-		if parsed[0] < time.Now().Unix() {
-			log.Printf("Token %v is expired (timestamp = %v)", token, parsed[0])
+		if len(parsed) < 1 {
+			log.Printf("No timestamp given")
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
+
+		var timestamp int64
+		err = json.Unmarshal(parsed[0], &timestamp)
+		if err != nil {
+			log.Printf("Failed to decode timestamp as int", err)
+			http.Error(w, "", http.StatusUnauthorized)
+			return
+		}
+
+		if timestamp < time.Now().Unix() {
+			log.Printf("Token %v is expired (timestamp = %v)", token, timestamp)
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
